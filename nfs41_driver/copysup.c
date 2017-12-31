@@ -39,9 +39,6 @@
 /* INCLUDES *****************************************************************/
 
 #include "copysup.h"
-//#include <pseh/pseh2.h>
-//#define NDEBUG
-//#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -50,15 +47,15 @@
 */
 BOOLEAN
 FsRtlCopyRead2(
-	IN PFILE_OBJECT FileObject,
-	IN PLARGE_INTEGER FileOffset,
-	IN ULONG Length,
-	IN BOOLEAN Wait,
-	IN ULONG LockKey,
-	OUT PVOID Buffer,
-	OUT PIO_STATUS_BLOCK IoStatus,
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PVOID TopLevelContext)
+	__in PFILE_OBJECT FileObject,
+	__in PLARGE_INTEGER FileOffset,
+	__in ULONG Length,
+	__in BOOLEAN Wait,
+	__in ULONG LockKey,
+	__out PVOID Buffer,
+	__out PIO_STATUS_BLOCK IoStatus,
+	__in PDEVICE_OBJECT DeviceObject,
+	__in PVOID TopLevelContext)
 {
 	BOOLEAN Ret;
 	ULONG PageCount;
@@ -200,15 +197,15 @@ CriticalSection:
 */
 BOOLEAN
 FsRtlCopyWrite2(
-	IN PFILE_OBJECT FileObject,
-	IN PLARGE_INTEGER FileOffset,
-	IN ULONG Length,
-	IN BOOLEAN Wait,
-	IN ULONG LockKey,
-	IN PVOID Buffer,
-	OUT PIO_STATUS_BLOCK IoStatus,
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PVOID TopLevelContext)
+	__in PFILE_OBJECT FileObject,
+	__in PLARGE_INTEGER FileOffset,
+	__in ULONG Length,
+	__in BOOLEAN Wait,
+	__in ULONG LockKey,
+	__in PVOID Buffer,
+	__out PIO_STATUS_BLOCK IoStatus,
+	__in PDEVICE_OBJECT DeviceObject,
+	__in PVOID TopLevelContext)
 {
 	IO_STATUS_BLOCK LocalIoStatus;
 	PFSRTL_ADVANCED_FCB_HEADER Fcb;
