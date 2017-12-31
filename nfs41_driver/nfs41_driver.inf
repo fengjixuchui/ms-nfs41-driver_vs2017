@@ -4,30 +4,33 @@
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=Sample ; TODO: edit Class
-ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Class=NetService
+ClassGuid={4d36e974-e325-11ce-bfc1-08002be10318} ; TODO: edit ClassGuid
 Provider=%ManufacturerName%
 CatalogFile=nfs41_driver.cat
-DriverVer= ; TODO: set DriverVer in stampinf property pages
+DriverVer= 0.1; alpha: set DriverVer in stampinf property pages
 
 [DestinationDirs]
-DefaultDestDir = 12
-nfs41_driver_Device_CoInstaller_CopyFiles = 11
+DefaultDestDir = 10
+nfs41_driver_CoInstaller_CopyFiles = 11
+Dll_Dir = 11
+Drivers_Dir = 12
 
 ; ================= Class section =====================
 
-[ClassInstall32]
-Addreg=SampleClassReg
+;[ClassInstall32]
+;Addreg=SampleClassReg
 
-[SampleClassReg]
-HKR,,,0,%ClassName%
-HKR,,Icon,,-5
+;[SampleClassReg]
+;HKR,,,0,%ClassName%
+;HKR,,Icon,,-5
 
 [SourceDisksNames]
 1 = %DiskName%,,,""
 
 [SourceDisksFiles]
 nfs41_driver.sys  = 1,,
+nfs41_np.dll = 1,,
 WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
 
 ;*****************************************
@@ -38,49 +41,60 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%nfs41_driver.DeviceDesc%=nfs41_driver_Device, Root\nfs41_driver ; TODO: edit hw-id
+%nfs41_driver.DeviceDesc%=nfs41_driver, Root\nfs41_driver ; TODO: edit hw-id, should Root be Device?
 
-[nfs41_driver_Device.NT]
-CopyFiles=Drivers_Dir
+[nfs41_driver.NT]
+AddReg=nfs41_driver_AddReg
+CopyFiles=Drivers_Dir,Dll_Dir
+
+[nfs41_driver_AddReg]
+HKR,,"DebugFlags",0x00010001 ,0x0
+HKR,NetworkProvider,DeviceName,,\Device\nfs41_driver
+HKR,NetworkProvider,Name,,"NFS41 Network"
+HKR,NetworkProvider,ProviderPath,,System32\nfs41_np.dll
 
 [Drivers_Dir]
 nfs41_driver.sys
 
+[Dll_Dir]
+nfs41_np.dll
+
 ;-------------- Service installation
-[nfs41_driver_Device.NT.Services]
+[nfs41_driver.NT.Services]
 AddService = nfs41_driver,%SPSVCINST_ASSOCSERVICE%, nfs41_driver_Service_Inst
 
 ; -------------- nfs41_driver driver install sections
 [nfs41_driver_Service_Inst]
 DisplayName    = %nfs41_driver.SVCDESC%
-ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
-StartType      = 3               ; SERVICE_DEMAND_START
+ServiceType    = 2               ; SERVICE_FILE_SYSTEM_DRIVER
+StartType      = 1               ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\nfs41_driver.sys
+LoadOrderGroup=Network
 
 ;
-;--- nfs41_driver_Device Coinstaller installation ------
+;--- nfs41_driver Coinstaller installation ------
 ;
 
-[nfs41_driver_Device.NT.CoInstallers]
-AddReg=nfs41_driver_Device_CoInstaller_AddReg
-CopyFiles=nfs41_driver_Device_CoInstaller_CopyFiles
+[nfs41_driver.NT.CoInstallers]
+AddReg=nfs41_driver_CoInstaller_AddReg
+CopyFiles=nfs41_driver_CoInstaller_CopyFiles
 
-[nfs41_driver_Device_CoInstaller_AddReg]
+[nfs41_driver_CoInstaller_AddReg]
 HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
 
-[nfs41_driver_Device_CoInstaller_CopyFiles]
+[nfs41_driver_CoInstaller_CopyFiles]
 WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
 
-[nfs41_driver_Device.NT.Wdf]
+[nfs41_driver.NT.Wdf]
 KmdfService =  nfs41_driver, nfs41_driver_wdfsect
 [nfs41_driver_wdfsect]
 KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
-ClassName="Samples" ; TODO: edit ClassName
+ManufacturerName="NFS41 Provider"
+ClassName="nfs41_driver" ; TODO: edit ClassName
 DiskName = "nfs41_driver Installation Disk"
 nfs41_driver.DeviceDesc = "nfs41_driver Device"
 nfs41_driver.SVCDESC = "nfs41_driver Service"
