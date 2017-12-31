@@ -322,7 +322,7 @@ SendTo_NFS41Driver(
 
 DWORD APIENTRY
 NPGetCaps(
-    DWORD nIndex )
+    __in DWORD nIndex )
 {
    DWORD rc = 0;
 
@@ -372,10 +372,10 @@ NPLogonNotify(
     __in PLUID   lpLogonId,
     __in PCWSTR lpAuthentInfoType,
     __in PVOID  lpAuthentInfo,
-    __in PCWSTR lpPreviousAuthentInfoType,
-    __in PVOID  lpPreviousAuthentInfo,
+    __in_opt PCWSTR lpPreviousAuthentInfoType,
+	__in_opt PVOID  lpPreviousAuthentInfo,
     __in PWSTR  lpStationName,
-    __in PVOID  StationHandle,
+	__in_opt PVOID  StationHandle,
     __out PWSTR  *lpLogonScript)
 {
     *lpLogonScript = NULL;
@@ -390,8 +390,8 @@ NPPasswordChangeNotify (
     __in LPCWSTR lpPreviousAuthentInfoType,
     __in LPVOID  lpPreviousAuthentInfo,
     __in LPWSTR  lpStationName,
-    LPVOID  StationHandle,
-    DWORD   dwChangeInfo )
+	__in_opt LPVOID  StationHandle,
+    __in DWORD   dwChangeInfo )
 {
     DbgP(( L"[aglo] NPPasswordChangeNotify: WN_NOT_SUPPORTED\n" ));
     SetLastError( WN_NOT_SUPPORTED );
@@ -409,7 +409,7 @@ NPAddConnection(
 
 DWORD APIENTRY
 NPAddConnection3(
-    __in HWND           hwndOwner,
+	__in_opt HWND           hwndOwner,
     __in LPNETRESOURCE  lpNetResource,
     __in_opt LPWSTR     lpPassword,
     __in_opt LPWSTR     lpUserName,
@@ -651,8 +651,8 @@ NPCancelConnection(
 DWORD APIENTRY
 NPGetConnection(
     __in LPWSTR  lpLocalName,
-    __out_bcount(*lpBufferSize) LPWSTR  lpRemoteName,
-    __inout LPDWORD lpBufferSize )
+    __out_ecount_opt(*lpnBufferSize) LPWSTR lpRemoteName,
+    __inout LPDWORD lpnBufferSize )
 {
     DWORD   Status = 0;
 
@@ -679,14 +679,14 @@ NPGetConnection(
                         pNetResource->LocalNameLength)
                         && ( !wcscmp(lpLocalName, pNetResource->LocalName) )) 
                 {
-                    if (*lpBufferSize < pNetResource->RemoteNameLength)
+                    if (*lpnBufferSize < pNetResource->RemoteNameLength)
                     {
-                        *lpBufferSize = pNetResource->RemoteNameLength;
+                        *lpnBufferSize = pNetResource->RemoteNameLength;
                         Status = WN_MORE_DATA;
                     }
                     else
                     {
-                        *lpBufferSize = pNetResource->RemoteNameLength;
+                        *lpnBufferSize = pNetResource->RemoteNameLength;
                         CopyMemory( lpRemoteName,
                                     pNetResource->RemoteName,
                                     pNetResource->RemoteNameLength);
@@ -705,11 +705,11 @@ NPGetConnection(
 
 DWORD APIENTRY
 NPOpenEnum(
-    DWORD          dwScope,
-    DWORD          dwType,
-    DWORD          dwUsage,
-    LPNETRESOURCE  lpNetResource,
-    LPHANDLE       lphEnum )
+	__in DWORD          dwScope,
+	__in DWORD          dwType,
+	__in DWORD          dwUsage,
+	__in_opt LPNETRESOURCE  lpNetResource,
+    __out LPHANDLE       lphEnum )
 {
     DWORD   Status;
 
@@ -749,10 +749,10 @@ NPOpenEnum(
 
 DWORD APIENTRY
 NPEnumResource(
-    HANDLE  hEnum,
-    LPDWORD lpcCount,
-    LPVOID  lpBuffer,
-    LPDWORD lpBufferSize)
+    __in HANDLE  hEnum,
+    __inout LPDWORD lpcCount,
+	__out_bcount(*lpBufferSize) LPVOID  lpBuffer,
+    __inout LPDWORD lpBufferSize)
 {
     DWORD           Status = WN_SUCCESS;
     ULONG           EntriesCopied;
@@ -857,7 +857,7 @@ NPEnumResource(
 
 DWORD APIENTRY
 NPCloseEnum(
-    HANDLE hEnum )
+   __in HANDLE hEnum )
 {
     DbgP((L"[aglo] NPCloseEnum\n"));
     HeapFree( GetProcessHeap( ), 0, (PVOID) hEnum );
@@ -866,9 +866,9 @@ NPCloseEnum(
 
 DWORD APIENTRY
 NPGetResourceParent(
-    LPNETRESOURCE   lpNetResource,
-    LPVOID  lpBuffer,
-    LPDWORD lpBufferSize )
+    __in LPNETRESOURCE   lpNetResource,
+	__out_bcount(*lpBufferSize) LPVOID  lpBuffer,
+    __inout LPDWORD lpBufferSize )
 {
     DbgP(( L"[aglo] NPGetResourceParent: WN_NOT_SUPPORTED\n" ));
     return WN_NOT_SUPPORTED;
@@ -887,10 +887,10 @@ NPGetResourceInformation(
 
 DWORD APIENTRY
 NPGetUniversalName(
-    LPCWSTR lpLocalPath,
-    DWORD   dwInfoLevel,
-    LPVOID  lpBuffer,
-    LPDWORD lpBufferSize )
+    __in LPCWSTR lpLocalPath,
+    __in DWORD   dwInfoLevel,
+	__out_bcount(*lpBufferSize) LPVOID  lpBuffer,
+    __inout LPDWORD lpBufferSize )
 {
     DbgP(( L"[aglo] NPGetUniversalName: WN_NOT_SUPPORTED\n" ));
     return  ERROR_NOT_SUPPORTED;
