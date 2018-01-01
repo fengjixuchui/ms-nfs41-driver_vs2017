@@ -70,7 +70,6 @@ nfs41_timings lookup, readdir, open, close, getattr, setattr, getacl, setacl, vo
     read, write, lock, unlock, setexattr, getexattr;
 #endif
 
-
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD nfs41_driver_unload;
 DRIVER_DISPATCH ( nfs41_FsdDispatch );
@@ -527,7 +526,7 @@ NTSTATUS marshall_unicode_as_utf8(
     }
 
     /* convert the string directly into the upcall buffer */
-    ansi.Buffer = (PCHAR)*pos + sizeof(ansi.MaximumLength);
+    ansi.Buffer = (PSTR)*pos + sizeof(ansi.MaximumLength);
     ansi.MaximumLength = (USHORT)ActualCount + sizeof(UNICODE_NULL);
     status = RtlUnicodeToUTF8N(ansi.Buffer, ansi.MaximumLength,
         &ActualCount, str->Buffer, str->Length);
@@ -3102,7 +3101,7 @@ VOID nfs41_ExtractNetRootName(
 {
     ULONG length = FilePathName->Length;
     PWCH w = FilePathName->Buffer;
-    PWCH wlimit = (PWCH)(((PCHAR)w)+length);
+    PWCH wlimit = (PWCH)(((PSTR)w)+length);
     PWCH wlow;
 
     w += (SrvCall->pSrvCallName->Length/sizeof(WCHAR));
@@ -3120,7 +3119,7 @@ VOID nfs41_ExtractNetRootName(
     }
 #endif
     NetRootName->Length = NetRootName->MaximumLength
-                = (USHORT)((PCHAR)w - (PCHAR)wlow);
+                = (USHORT)((PSTR)w - (PSTR)wlow);
 #ifdef DEBUG_MOUNT
     DbgP("In: pSrvCall %p PathName=%wZ SrvCallName=%wZ Out: NetRootName=%wZ\n", 
         SrvCall, FilePathName, SrvCall->pSrvCallName, NetRootName);
@@ -3270,16 +3269,20 @@ NTSTATUS nfs41_FinalizeVNetRoot(
     DbgEn();
     print_v_net_root(1, pVNetRoot);
 #endif
-    if (pVNetRoot->pNetRoot->Type != NET_ROOT_DISK && 
+	if(!pVNetRoot) return STATUS_FWP_NULL_POINTER;
+	if(!(pVNetRoot->pNetRoot)) return STATUS_FWP_NULL_POINTER;
+    if (pVNetRoot->pNetRoot->Type != NET_ROOT_DISK &&
             pVNetRoot->pNetRoot->Type != NET_ROOT_WILD)
         status = STATUS_NOT_SUPPORTED;
 #ifdef STORE_MOUNT_SEC_CONTEXT
-    else if (pVNetRootContext->session != INVALID_HANDLE_VALUE) {
+    else if (pVNetRootContext == NULL || pVNetRootContext->session != INVALID_HANDLE_VALUE) {
 #ifdef DEBUG_MOUNT
         DbgP("nfs41_FinalizeVNetRoot: deleting security context: %p\n",
             pVNetRootContext->mount_sec_ctx.ClientToken);
 #endif
-        SeDeleteClientSecurity(&pVNetRootContext->mount_sec_ctx);
+		if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+		if (! &pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+		SeDeleteClientSecurity(&pVNetRootContext->mount_sec_ctx);
     }
 #endif
 #ifdef DEBUG_MOUNT
@@ -3656,7 +3659,7 @@ retry_on_link:
             RxContext->pRelevantSrvOpen->pVNetRoot;
         PUNICODE_STRING VNetRootPrefix = &VNetRoot->PrefixEntry.Prefix;
         UNICODE_STRING AbsPath;
-        PCHAR buf;
+        PSTR buf;
         BOOLEAN ReparseRequired;
 
         /* allocate the string for RxPrepareToReparseSymbolicLink(), and
@@ -3671,7 +3674,7 @@ retry_on_link:
             goto out_free;
         }
 
-        buf = (PCHAR)AbsPath.Buffer;
+        buf = (PSTR)AbsPath.Buffer;
         RtlCopyMemory(buf, DeviceObject->DeviceName.Buffer, 
             DeviceObject->DeviceName.Length);
         buf += DeviceObject->DeviceName.Length;
@@ -3928,6 +3931,7 @@ ULONG nfs41_ExtendForCache(
         *pNewAllocationSize);
 #endif
     pNewAllocationSize->QuadPart = pNewFileSize->QuadPart + 8192;
+	if (!nfs41_fcb) return (ULONG)STATUS_FWP_NULL_POINTER;
     nfs41_fcb->StandardInfo.AllocationSize.QuadPart = 
         pNewAllocationSize->QuadPart;
     nfs41_fcb->StandardInfo.EndOfFile.QuadPart = pNewFileSize->QuadPart;
@@ -3993,11 +3997,14 @@ NTSTATUS nfs41_CloseSrvOpen(
     NTSTATUS status = STATUS_INSUFFICIENT_RESOURCES;
     nfs41_updowncall_entry *entry;
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if(!SrvOpen)  return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
+	if(!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
-    __notnull PNFS41_FCB nfs41_fcb = NFS41GetFcbExtension(RxContext->pFcb);
+	if (!RxContext) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_FCB nfs41_fcb = NFS41GetFcbExtension(RxContext->pFcb);
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(RxContext->pFobx);
 #ifdef ENABLE_TIMINGS
     LARGE_INTEGER t1, t2;
@@ -4008,21 +4015,25 @@ NTSTATUS nfs41_CloseSrvOpen(
     DbgEn();
     print_debug_header(RxContext);
 #endif
-
-    if (!nfs41_fobx->deleg_type && !nfs41_fcb->StandardInfo.Directory &&
+	if(!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (!(RxContext->pFcb)) return STATUS_FWP_NULL_POINTER;
+	if (!nfs41_fobx->deleg_type && !nfs41_fcb->StandardInfo.Directory &&
             !RxContext->pFcb->OpenCount) {
         nfs41_remove_fcb_entry(RxContext->pFcb);
     }
-
+	if (! &nfs41_fobx)  return STATUS_FWP_NULL_POINTER;
+	if (!pVNetRootContext)  return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext)  return STATUS_FWP_NULL_POINTER;
     status = nfs41_UpcallCreate(NFS41_CLOSE, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state, 
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;
 
     entry->u.Close.srv_open = SrvOpen;
-    if (nfs41_fcb->StandardInfo.DeletePending)
+	if (!nfs41_fcb) return STATUS_FWP_NULL_POINTER;
+	if (nfs41_fcb->StandardInfo.DeletePending)
         nfs41_fcb->DeletePending = TRUE;
-    if (!RxContext->pFcb->OpenCount || 
+	if (!RxContext->pFcb->OpenCount ||
             (nfs41_fcb->StandardInfo.DeletePending &&
                 nfs41_fcb->StandardInfo.Directory))
         entry->u.Close.remove = nfs41_fcb->StandardInfo.DeletePending;
@@ -4070,6 +4081,7 @@ NTSTATUS nfs41_DeallocateForFobx(
     IN OUT PMRX_FOBX pFobx)
 {
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(pFobx);
+	if (!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
     if (nfs41_fobx->acl)
         RxFreePool(nfs41_fobx->acl);
     return STATUS_SUCCESS;
@@ -4129,12 +4141,17 @@ NTSTATUS nfs41_QueryDirectory(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
     nfs41_updowncall_entry *entry;
+	if(!RxContext) return STATUS_FWP_NULL_POINTER;
     FILE_INFORMATION_CLASS InfoClass = RxContext->Info.FileInformationClass;
-    PUNICODE_STRING Filter = &RxContext->pFobx->UnicodeQueryTemplate;
+	if (! &RxContext) return STATUS_FWP_NULL_POINTER;
+	if (! (&RxContext->pFobx)) return STATUS_FWP_NULL_POINTER;
+	PUNICODE_STRING Filter = &RxContext->pFobx->UnicodeQueryTemplate;
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
-    __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
-        NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
-    __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
+	NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
+	if (!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(RxContext->pFobx);
 #ifdef ENABLE_TIMINGS
@@ -4165,7 +4182,11 @@ NTSTATUS nfs41_QueryDirectory(
         status = STATUS_NOT_SUPPORTED;
         goto out;
     }
-    status = nfs41_UpcallCreate(NFS41_DIR_QUERY, &nfs41_fobx->sec_ctx,
+	if (!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (! &nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext) return STATUS_FWP_NULL_POINTER;
+	status = nfs41_UpcallCreate(NFS41_DIR_QUERY, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state,
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;
@@ -4267,6 +4288,8 @@ void nfs41_create_volume_info(PFILE_FS_VOLUME_INFORMATION pVolInfo, DWORD *len)
 static BOOLEAN is_root_directory(
     PRX_CONTEXT RxContext)
 {
+	if (!RxContext) return FALSE;
+	if (! (RxContext->pRelevantSrvOpen)) return FALSE;
     __notnull PV_NET_ROOT VNetRoot = (PV_NET_ROOT)
         RxContext->pRelevantSrvOpen->pVNetRoot;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
@@ -4274,10 +4297,14 @@ static BOOLEAN is_root_directory(
 
     /* calculate the root directory's length, including vnetroot prefix,
      * mount path, and a trailing \ */
-    const USHORT RootPathLen = VNetRoot->PrefixEntry.Prefix.Length +
+	if (!VNetRoot) return FALSE;
+	if (!pVNetRootContext) return FALSE;
+	const USHORT RootPathLen = VNetRoot->PrefixEntry.Prefix.Length +
             pVNetRootContext->MountPathLen + sizeof(WCHAR);
 
-    return RxContext->CurrentIrpSp->FileObject->FileName.Length <= RootPathLen;
+	if (!(RxContext->CurrentIrpSp)) return FALSE;
+	if (!(RxContext->CurrentIrpSp->FileObject)) return FALSE;
+	return RxContext->CurrentIrpSp->FileObject->FileName.Length <= RootPathLen;
 }
 
 NTSTATUS nfs41_QueryVolumeInformation(
@@ -4285,12 +4312,15 @@ NTSTATUS nfs41_QueryVolumeInformation(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
     nfs41_updowncall_entry *entry;
+	if (!RxContext) return STATUS_FWP_NULL_POINTER;
     ULONG RemainingLength = RxContext->Info.LengthRemaining, SizeUsed;
     FS_INFORMATION_CLASS InfoClass = RxContext->Info.FsInformationClass;
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
-    __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
+	if (! (SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(RxContext->pFobx);
     NFS41GetDeviceExtension(RxContext, DevExt);
@@ -4376,6 +4406,10 @@ NTSTATUS nfs41_QueryVolumeInformation(
         status = STATUS_NOT_SUPPORTED;
         goto out;
     }
+	if (!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (! &nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext) return STATUS_FWP_NULL_POINTER;
     status = nfs41_UpcallCreate(NFS41_VOLUME_QUERY, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state, 
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
@@ -4530,8 +4564,11 @@ NTSTATUS check_nfs41_setea_args(
     IN PRX_CONTEXT RxContext)
 {
     NTSTATUS status;
+
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(RxContext->pRelevantSrvOpen->pVNetRoot);
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!&pVNetRootContext) return STATUS_FWP_NULL_POINTER;
     __notnull PFILE_FS_ATTRIBUTE_INFORMATION FsAttrs =
         &pVNetRootContext->FsAttrs;
     __notnull PFILE_FULL_EA_INFORMATION ea =
@@ -4576,10 +4613,13 @@ NTSTATUS nfs41_SetEaInformation(
     __notnull PFILE_FULL_EA_INFORMATION eainfo = 
         (PFILE_FULL_EA_INFORMATION)RxContext->Info.Buffer;        
     nfs3_attrs *attrs = NULL;
+
     ULONG buflen = RxContext->CurrentIrpSp->Parameters.SetEa.Length, error_offset;
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
+	if (! (SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PNFS41_FCB nfs41_fcb = NFS41GetFcbExtension(RxContext->pFcb);
@@ -4597,8 +4637,10 @@ NTSTATUS nfs41_SetEaInformation(
 
     status = check_nfs41_setea_args(RxContext);
     if (status) goto out;
-
-    status = nfs41_UpcallCreate(NFS41_EA_SET, &nfs41_fobx->sec_ctx,
+	if (!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext) return STATUS_FWP_NULL_POINTER;
+	status = nfs41_UpcallCreate(NFS41_EA_SET, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state,
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;
@@ -4635,7 +4677,8 @@ NTSTATUS nfs41_SetEaInformation(
                 (SrvOpen->DesiredAccess & 
                 (FILE_READ_DATA | FILE_WRITE_DATA | FILE_APPEND_DATA)))
             nfs41_update_fcb_list(RxContext->pFcb, entry->ChangeTime);
-        nfs41_fcb->changeattr = entry->ChangeTime;
+		if (!nfs41_fcb) return STATUS_FWP_NULL_POINTER;
+		nfs41_fcb->changeattr = entry->ChangeTime;
         nfs41_fcb->mode = entry->u.SetEa.mode;
     }
     RxFreePool(entry);
@@ -4661,6 +4704,7 @@ NTSTATUS check_nfs41_queryea_args(
     NTSTATUS status;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(RxContext->pRelevantSrvOpen->pVNetRoot);
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
     __notnull PFILE_FS_ATTRIBUTE_INFORMATION FsAttrs =
         &pVNetRootContext->FsAttrs;
     PFILE_GET_EA_INFORMATION ea = (PFILE_GET_EA_INFORMATION)
@@ -4696,9 +4740,11 @@ static NTSTATUS QueryCygwinSymlink(
     OUT PFILE_FULL_EA_INFORMATION info)
 {
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION VNetRootContext =
             NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
-    __notnull PNFS41_NETROOT_EXTENSION NetRootContext =
+	if (!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_NETROOT_EXTENSION NetRootContext =
             NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PNFS41_FOBX Fobx = NFS41GetFobxExtension(RxContext->pFobx);
     nfs41_updowncall_entry *entry;
@@ -4717,7 +4763,10 @@ static NTSTATUS QueryCygwinSymlink(
     TargetName.MaximumLength = (USHORT)min(RxContext->Info.LengthRemaining -
         HeaderLen, 0xFFFF);
 
-    status = nfs41_UpcallCreate(NFS41_SYMLINK, &Fobx->sec_ctx, 
+	if (!VNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!NetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!Fobx) return STATUS_FWP_NULL_POINTER;
+	status = nfs41_UpcallCreate(NFS41_SYMLINK, &Fobx->sec_ctx,
         VNetRootContext->session, Fobx->nfs41_open_state,
         NetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;
@@ -4758,6 +4807,7 @@ static NTSTATUS QueryCygwinEA(
 
     if (AnsiStrEq(&NfsSymlinkTargetName, query->EaName, query->EaNameLength)) {
         __notnull PNFS41_FCB nfs41_fcb = NFS41GetFcbExtension(RxContext->pFcb);
+		if(!nfs41_fcb) return STATUS_FWP_NULL_POINTER;
         if (nfs41_fcb->BasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
             status = QueryCygwinSymlink(RxContext, query, info);
             goto out;
@@ -4842,10 +4892,12 @@ NTSTATUS nfs41_QueryEaInformation(
             RxContext->CurrentIrpSp->Parameters.QueryEa.EaList;
     ULONG buflen = RxContext->CurrentIrpSp->Parameters.QueryEa.Length;
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
             NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
-    __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
-            NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
+	if (!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
+	__notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
+			NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(RxContext->pFobx);
 #ifdef ENABLE_TIMINGS
     LARGE_INTEGER t1, t2;
@@ -4866,7 +4918,10 @@ NTSTATUS nfs41_QueryEaInformation(
     if (status != STATUS_NONEXISTENT_EA_ENTRY)
         goto out;
 
-    status = nfs41_UpcallCreate(NFS41_EA_GET, &nfs41_fobx->sec_ctx,
+	if (!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext) return STATUS_FWP_NULL_POINTER;
+	status = nfs41_UpcallCreate(NFS41_EA_GET, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state,
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;
@@ -4964,8 +5019,10 @@ NTSTATUS nfs41_QuerySecurityInformation(
     nfs41_updowncall_entry *entry;
     __notnull PNFS41_FOBX nfs41_fobx = NFS41GetFobxExtension(RxContext->pFobx);
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
+	if (!SrvOpen) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
+	if (!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     SECURITY_INFORMATION info_class =
@@ -5108,6 +5165,7 @@ NTSTATUS nfs41_SetSecurityInformation(
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
     __notnull PNFS41_V_NET_ROOT_EXTENSION pVNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
+	if (!(SrvOpen->pVNetRoot)) return STATUS_FWP_NULL_POINTER;
     __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);
     __notnull PSECURITY_DESCRIPTOR sec_desc = 
@@ -6446,7 +6504,7 @@ NTSTATUS nfs41_GetReparsePoint(
     XXCTL_LOWIO_COMPONENT *FsCtl = &RxContext->LowIoContext.ParamsFor.FsCtl;
     __notnull PNFS41_FOBX Fobx = NFS41GetFobxExtension(RxContext->pFobx);
     __notnull PMRX_SRV_OPEN SrvOpen = RxContext->pRelevantSrvOpen;
-    __notnull PNFS41_V_NET_ROOT_EXTENSION VNetRootContext = 
+	__notnull PNFS41_V_NET_ROOT_EXTENSION VNetRootContext =
         NFS41GetVNetRootExtension(SrvOpen->pVNetRoot);
     __notnull PNFS41_NETROOT_EXTENSION pNetRootContext =
         NFS41GetNetRootExtension(SrvOpen->pVNetRoot->pNetRoot);

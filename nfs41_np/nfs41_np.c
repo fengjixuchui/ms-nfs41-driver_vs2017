@@ -651,7 +651,7 @@ NPCancelConnection(
 DWORD APIENTRY
 NPGetConnection(
     __in LPWSTR  lpLocalName,
-    __out_ecount_opt(*lpnBufferSize) LPWSTR lpRemoteName,
+	__out_ecount_opt(*lpnBufferSize) LPWSTR lpRemoteName,
     __inout LPDWORD lpnBufferSize )
 {
     DWORD   Status = 0;
@@ -662,7 +662,6 @@ NPGetConnection(
     Status = OpenSharedMemory( &hMutex,
                                &hMemory,
                                (PVOID)&pSharedMemory);
-
     if (Status == WN_SUCCESS)
     {
         INT  Index;
@@ -684,12 +683,12 @@ NPGetConnection(
                         *lpnBufferSize = pNetResource->RemoteNameLength;
                         Status = WN_MORE_DATA;
                     }
-                    else
-                    {
-                        *lpnBufferSize = pNetResource->RemoteNameLength;
-                        CopyMemory( lpRemoteName,
-                                    pNetResource->RemoteName,
-                                    pNetResource->RemoteNameLength);
+					else
+					{
+						*lpnBufferSize = pNetResource->RemoteNameLength;
+						CopyMemory(lpRemoteName,
+							pNetResource->RemoteName,
+							pNetResource->RemoteNameLength);
                         Status = WN_SUCCESS;
                     }
                     break;
@@ -881,6 +880,8 @@ NPGetResourceInformation(
     __inout LPDWORD lpBufferSize,
     __deref_out LPWSTR *lplpSystem )
 {
+	RtlZeroMemory(lpBuffer, 1);  //C6101
+	lplpSystem[0] = 0; //C6101
     DbgP(( L"[aglo] NPGetResourceInformation: WN_NOT_SUPPORTED\n" ));
     return WN_NOT_SUPPORTED;
 }

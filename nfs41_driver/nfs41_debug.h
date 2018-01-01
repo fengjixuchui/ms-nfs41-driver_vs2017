@@ -95,8 +95,8 @@ void print_acl_args(SECURITY_INFORMATION info);
                                 PNFS_TRACE_TAG, __FUNCTION__, status);
 ULONG
 dprintk(
-    IN PCHAR func,
+    IN PSTR func,
     IN ULONG flags,
-    IN PCHAR format,
+    IN PSTR format,
     ...);
 #endif

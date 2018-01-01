@@ -40,6 +40,11 @@
 
 #include "copysup.h"
 
+/* C28172 */
+#ifdef  ALLOC_PRAGMA 
+#pragma alloc_text(PAGE, FsRtlCopyRead2) 
+#endif
+
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -191,6 +196,12 @@ CriticalSection:
 
 	return Ret;
 }
+
+
+/* C28172 */
+#ifdef  ALLOC_PRAGMA 
+#pragma alloc_text(PAGE, FsRtlCopyWrite2) 
+#endif
 
 /*
 * @implemented

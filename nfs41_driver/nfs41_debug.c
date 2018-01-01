@@ -61,7 +61,7 @@ ULONG __cdecl DbgP(IN PCCH fmt, ...)
             time_fields.Milliseconds, msg);
 #else
         DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-            "[%04x] %s", PsGetCurrentProcessId(), msg);
+            "[%p] %s", PsGetCurrentProcessId(), msg);
 #endif
     }
     va_end(args);
@@ -93,7 +93,7 @@ ULONG __cdecl print_error(IN PCCH fmt, ...)
             time_fields.Milliseconds, msg);
 #else
         DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-            "[%04x] %s", PsGetCurrentProcessId(), msg);
+            "[%p] %s", PsGetCurrentProcessId(), msg);
 #endif
     }
     va_end(args);
@@ -114,7 +114,7 @@ void print_hexbuf(int on, unsigned char *title, unsigned char *buf, int len)
     RtlTimeToTimeFields(&local_time, &time_fields);
 
     DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-        "[%ld].[%02u:%02u:%02u.%u] %s\n", IoGetCurrentProcess(), 
+        "[%p].[%02u:%02u:%02u.%u] %s\n", IoGetCurrentProcess(), 
         time_fields.Hour, time_fields.Minute, time_fields.Second, 
         time_fields.Milliseconds, title);
     for(j = 0, k = 0; j < len; j++, k++) {
@@ -709,9 +709,9 @@ void print_wait_status(int on, const char *prefix, NTSTATUS status,
  */
 ULONG
 dprintk(
-    IN PCHAR func,
+    IN PSTR func,
     IN ULONG flags,
-    IN PCHAR format,
+    IN PSTR format,
     ...)
 {
     #define     TEMP_BUFFER_SIZE        1024

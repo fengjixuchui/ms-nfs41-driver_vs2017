@@ -86,7 +86,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions> POOL_NX_OPTIN_AUTO;EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\nfs41_np$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4201;4218;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -96,7 +96,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions> POOL_NX_OPTIN_AUTO;EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\nfs41_np;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4201;4218;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -106,7 +106,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions> POOL_NX_OPTIN_AUTO;EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\nfs41_np;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4201;4218;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -116,7 +116,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions> POOL_NX_OPTIN_AUTO;EXPLODE_POOLTAGS;MONOLITHIC_MINIRDR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\nfs41_np;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4201;4218;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
