@@ -5041,6 +5041,7 @@ NTSTATUS nfs41_QuerySecurityInformation(
     status = check_nfs41_getacl_args(RxContext);
     if (status) goto out;
 
+	if(!nfs41_fobx) return STATUS_FWP_NULL_POINTER;
     if (nfs41_fobx->acl && nfs41_fobx->acl_len) {
         LARGE_INTEGER current_time;
         KeQuerySystemTime(&current_time);
@@ -5067,7 +5068,9 @@ NTSTATUS nfs41_QuerySecurityInformation(
             goto out;
     }
 
-    status = nfs41_UpcallCreate(NFS41_ACL_QUERY, &nfs41_fobx->sec_ctx, 
+	if (!pVNetRootContext) return STATUS_FWP_NULL_POINTER;
+	if (!pNetRootContext) return STATUS_FWP_NULL_POINTER;
+	status = nfs41_UpcallCreate(NFS41_ACL_QUERY, &nfs41_fobx->sec_ctx,
         pVNetRootContext->session, nfs41_fobx->nfs41_open_state,
         pNetRootContext->nfs41d_version, SrvOpen->pAlreadyPrefixedName, &entry);
     if (status) goto out;

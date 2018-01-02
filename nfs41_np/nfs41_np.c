@@ -655,7 +655,7 @@ NPGetConnection(
     __inout LPDWORD lpnBufferSize )
 {
     DWORD   Status = 0;
-
+	lpRemoteName = TEXT(""); //C6054
     HANDLE  hMutex, hMemory;
     PNFS41NP_SHARED_MEMORY  pSharedMemory;
 
@@ -685,7 +685,7 @@ NPGetConnection(
                     }
 					else
 					{
-						*lpnBufferSize = pNetResource->RemoteNameLength;
+						*lpnBufferSize = pNetResource->RemoteNameLength; // WCHAR RemoteName[MAX_PATH=260]:minwindef.h
 						CopyMemory(lpRemoteName,
 							pNetResource->RemoteName,
 							pNetResource->RemoteNameLength);
@@ -881,7 +881,7 @@ NPGetResourceInformation(
     __deref_out LPWSTR *lplpSystem )
 {
 	RtlZeroMemory(lpBuffer, 1);  //C6101
-	lplpSystem[0] = 0; //C6101
+	*lplpSystem = L""; //C6101
     DbgP(( L"[aglo] NPGetResourceInformation: WN_NOT_SUPPORTED\n" ));
     return WN_NOT_SUPPORTED;
 }

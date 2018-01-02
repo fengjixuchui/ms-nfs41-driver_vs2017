@@ -18,13 +18,6 @@ Drivers_Dir = 12
 
 ; ================= Class section =====================
 
-;[ClassInstall32]
-;Addreg=SampleClassReg
-
-;[SampleClassReg]
-;HKR,,,0,%ClassName%
-;HKR,,Icon,,-5
-
 [SourceDisksNames]
 1 = %DiskName%,,,""
 
@@ -49,9 +42,9 @@ CopyFiles=Drivers_Dir,Dll_Dir
 
 [nfs41_driver_AddReg]
 HKR,,"DebugFlags",0x00010001 ,0x0
-HKR,NetClient,DeviceName,,\Root\nfs41_driver
-HKR,NetClient,Name,,"NFS41 Network"
-HKR,NetClient,ProviderPath,,System32\nfs41_np.dll
+HKR,NetService,DeviceName,,\Device\nfs41_driver  ; should this be "NetworkProvider"?
+HKR,NetService,Name,,"NFS41 Network"
+HKR,NetService,ProviderPath,,System32\nfs41_np.dll
 
 [Drivers_Dir]
 nfs41_driver.sys
@@ -71,10 +64,6 @@ StartType      = 1               ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\nfs41_driver.sys
 LoadOrderGroup=Network
-
-;-------------- Service removal; apparently invalid in an Universal INF
-;[nfs41_driver.NT.Services.Remove]
-;DelService = nfs41_driver
 
 ;
 ;--- nfs41_driver Coinstaller installation ------
@@ -98,7 +87,7 @@ KmdfLibraryVersion = 1.23  ;$KMDFVERSION$
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
 ManufacturerName="NFS41 Provider"
-ClassName="nfs41_driver" ; TODO: edit ClassName
+ClassName="nfs41_driver"
 DiskName = "nfs41_driver Installation Disk"
 nfs41_driver.DeviceDesc = "nfs41_driver Device"
 nfs41_driver.SVCDESC = "nfs41_driver Service"
