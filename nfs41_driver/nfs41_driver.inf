@@ -1,14 +1,14 @@
-;
+; Copyright: U. Michigan
 ; nfs41_driver.inf
 ;
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=NetService
+Class=NetService ;Network Service Class This class includes network services, such as redirectors and servers.
 ClassGuid={4d36e974-e325-11ce-bfc1-08002be10318} ; TODO: edit ClassGuid
 Provider=%ManufacturerName%
 CatalogFile=nfs41_driver.cat
-DriverVer= 0.1; alpha: set DriverVer in stampinf property pages
+DriverVer= 01/01/2018,1.0; alpha: set DriverVer in stampinf property pages
 
 [DestinationDirs]
 DefaultDestDir = 10
@@ -41,7 +41,7 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%nfs41_driver.DeviceDesc%=nfs41_driver, Root\nfs41_driver ; TODO: edit hw-id, should Root be Device?
+%nfs41_driver.DeviceDesc%=nfs41_driver, Root\nfs41_driver ; TODO: CHOOSE SWD; edit hw-id, should Root be Device?
 
 [nfs41_driver.NT]
 AddReg=nfs41_driver_AddReg
@@ -49,9 +49,9 @@ CopyFiles=Drivers_Dir,Dll_Dir
 
 [nfs41_driver_AddReg]
 HKR,,"DebugFlags",0x00010001 ,0x0
-HKR,NetworkProvider,DeviceName,,\Device\nfs41_driver
-HKR,NetworkProvider,Name,,"NFS41 Network"
-HKR,NetworkProvider,ProviderPath,,System32\nfs41_np.dll
+HKR,NetClient,DeviceName,,\Root\nfs41_driver
+HKR,NetClient,Name,,"NFS41 Network"
+HKR,NetClient,ProviderPath,,System32\nfs41_np.dll
 
 [Drivers_Dir]
 nfs41_driver.sys
@@ -72,6 +72,10 @@ ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\nfs41_driver.sys
 LoadOrderGroup=Network
 
+;-------------- Service removal; apparently invalid in an Universal INF
+;[nfs41_driver.NT.Services.Remove]
+;DelService = nfs41_driver
+
 ;
 ;--- nfs41_driver Coinstaller installation ------
 ;
@@ -89,7 +93,7 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
 [nfs41_driver.NT.Wdf]
 KmdfService =  nfs41_driver, nfs41_driver_wdfsect
 [nfs41_driver_wdfsect]
-KmdfLibraryVersion = $KMDFVERSION$
+KmdfLibraryVersion = 1.23  ;$KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
