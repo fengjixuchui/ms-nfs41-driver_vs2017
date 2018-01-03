@@ -33,9 +33,6 @@
     <ClCompile Include="wmlkm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="copysup_new.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="copysup.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,9 +55,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wmlkm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="copysup_new.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="copysup.h">

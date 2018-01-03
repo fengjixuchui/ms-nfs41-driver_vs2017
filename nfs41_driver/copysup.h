@@ -13,7 +13,7 @@ FsRtlCopyRead2(
     _Out_ PVOID Buffer,
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PVOID TopLevelContext);
+    _In_ PVOID TopLevelContext); // TopLevelContext was added to FsRtlCopyRead
 
 BOOLEAN
 FsRtlCopyWrite2(

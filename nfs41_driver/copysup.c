@@ -24,6 +24,11 @@
 * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
 */
 
+/* INCLUDES *****************************************************************/
+
+#include "copysup.h"
+#include <wdm.h>
+
 /* definitions extracted from pseh.h ****************************************/
 #define _SEH2_TRY __try
 #define _SEH2_FINALLY __finally
@@ -36,20 +41,14 @@
 #define _SEH2_LEAVE __leave
 #define _SEH2_VOLATILE
 
-/* INCLUDES *****************************************************************/
-
-#include "copysup.h"
-
-/* C28172 */
-#ifdef  ALLOC_PRAGMA 
-#pragma alloc_text(PAGE, FsRtlCopyRead2) 
-#endif
 
 /* FUNCTIONS ****************************************************************/
 
 /*
 * @implemented
 */
+
+#pragma alloc_text (PAGE, FsRtlCopyRead2) // C28172
 BOOLEAN
 FsRtlCopyRead2(
 	__in PFILE_OBJECT FileObject,
@@ -69,6 +68,21 @@ FsRtlCopyRead2(
 	PFAST_IO_DISPATCH FastIoDispatch;
 	PDEVICE_OBJECT RelatedDeviceObject;
 
+	if (!Buffer) return FALSE; //C6101
+	_SEH2_TRY
+	{
+		ProbeForWrite(Buffer, Length, sizeof(ULONG));
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+//SetLastNtError(_SEH2_GetExceptionCode());
+		return FALSE;
+	}
+	_SEH2_END;
+
+	RtlZeroMemory(IoStatus, sizeof(PIO_STATUS_BLOCK)); //C6101
+
+	_IRQL_limited_to_(PASSIVE_LEVEL);
 	PAGED_CODE();
 
 	Ret = TRUE;
@@ -120,6 +134,7 @@ FsRtlCopyRead2(
 	if (Fcb->IsFastIoPossible == FastIoIsQuestionable)
 	{
 		RelatedDeviceObject = IoGetRelatedDeviceObject(FileObject);
+#pragma warning(suppress: 28175)
 		FastIoDispatch = RelatedDeviceObject->DriverObject->FastIoDispatch;
 		ASSERT(FastIoDispatch != NULL);
 		ASSERT(FastIoDispatch->FastIoCheckIfPossible != NULL);
@@ -153,6 +168,7 @@ FsRtlCopyRead2(
 
 	_SEH2_TRY
 	{
+		if (!Buffer) return FALSE;
 		/* If we cannot wait, or if file is bigger than 4GB */
 		if (!Wait || (FinalOffset.HighPart | Fcb->FileSize.HighPart) != 0)
 		{
@@ -197,15 +213,11 @@ CriticalSection:
 	return Ret;
 }
 
-
-/* C28172 */
-#ifdef  ALLOC_PRAGMA 
-#pragma alloc_text(PAGE, FsRtlCopyWrite2) 
-#endif
-
 /*
 * @implemented
 */
+
+#pragma alloc_text (PAGE, FsRtlCopyWrite2)
 BOOLEAN
 FsRtlCopyWrite2(
 	__in PFILE_OBJECT FileObject,
@@ -221,15 +233,11 @@ FsRtlCopyWrite2(
 	IO_STATUS_BLOCK LocalIoStatus;
 	PFSRTL_ADVANCED_FCB_HEADER Fcb;
 	BOOLEAN WriteToEof, AcquiredShared, FileSizeChanged, Ret;
-	LARGE_INTEGER WriteOffset, LastOffset, InitialFileSize, InitialValidDataLength;
-	// C4701: potentially uninitialized local variable
-	InitialFileSize.HighPart = 0;
-	InitialFileSize.LowPart = 0;
-	InitialFileSize.QuadPart = 0;
-	InitialValidDataLength.HighPart = 0;
-	InitialValidDataLength.LowPart = 0;
-	InitialValidDataLength.QuadPart = 0;
+	LARGE_INTEGER WriteOffset, LastOffset, InitialFileSize = { { 0, 0 } }, InitialValidDataLength = { { 0, 0 } };
 
+	RtlZeroMemory(IoStatus, sizeof(PIO_STATUS_BLOCK)); //C6101
+
+	_IRQL_limited_to_(PASSIVE_LEVEL);
 	PAGED_CODE();
 
 	/* First, check whether we're writing to EOF */
@@ -374,6 +382,7 @@ FsRtlCopyWrite2(
 			PDEVICE_OBJECT RelatedDeviceObject;
 
 			RelatedDeviceObject = IoGetRelatedDeviceObject(FileObject);
+#pragma warning(suppress: 28175)
 			FastIoDispatch = RelatedDeviceObject->DriverObject->FastIoDispatch;
 			ASSERT(FastIoDispatch != NULL);
 			ASSERT(FastIoDispatch->FastIoCheckIfPossible != NULL);
@@ -608,6 +617,7 @@ FsRtlCopyWrite2(
 			PDEVICE_OBJECT RelatedDeviceObject;
 
 			RelatedDeviceObject = IoGetRelatedDeviceObject(FileObject);
+#pragma warning(suppress: 28175)
 			FastIoDispatch = RelatedDeviceObject->DriverObject->FastIoDispatch;
 			ASSERT(FastIoDispatch != NULL);
 			ASSERT(FastIoDispatch->FastIoCheckIfPossible != NULL);

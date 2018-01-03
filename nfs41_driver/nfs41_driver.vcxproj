@@ -147,7 +147,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="copysup.c" />
-    <ClCompile Include="copysup_new.c" />
     <ClCompile Include="nfs41_debug.c" />
     <ClCompile Include="nfs41_driver.c" />
     <ClCompile Include="wmlkm.c" />
@@ -160,7 +159,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="copysup.h" />
-    <ClInclude Include="copysup_new.h" />
     <ClInclude Include="nfs41_debug.h" />
     <ClInclude Include="nfs41_driver.h" />
     <ClInclude Include="wmlkm.h" />
