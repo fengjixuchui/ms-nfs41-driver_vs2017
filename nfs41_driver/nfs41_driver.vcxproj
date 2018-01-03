@@ -136,11 +136,27 @@
     <Inf Include="nfs41_driver.inf" />
   </ItemGroup>
   <ItemGroup>
-    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x64\Debug\nfs41_np.dll">
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x64\Release\nfs41_driver.sys" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       <PackageRelativeDirectory>
       </PackageRelativeDirectory>
     </FilesToPackage>
-    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x64\Debug\nfs41_driver.sys">
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x64\Release\nfs41_np.dll" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      <PackageRelativeDirectory>
+      </PackageRelativeDirectory>
+    </FilesToPackage>
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x86\Debug\nfs41_driver.sys" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      <PackageRelativeDirectory>
+      </PackageRelativeDirectory>
+    </FilesToPackage>
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x86\Debug\nfs41_np.dll" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      <PackageRelativeDirectory>
+      </PackageRelativeDirectory>
+    </FilesToPackage>
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x86\Release\nfs41_driver.sys" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      <PackageRelativeDirectory>
+      </PackageRelativeDirectory>
+    </FilesToPackage>
+    <FilesToPackage Include="C:\Users\regula\Source\Repos\ms-nfs41-driver_vs2017\x86\Release\nfs41_np.dll" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       <PackageRelativeDirectory>
       </PackageRelativeDirectory>
     </FilesToPackage>
