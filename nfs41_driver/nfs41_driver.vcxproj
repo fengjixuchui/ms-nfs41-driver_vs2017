@@ -81,16 +81,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -101,6 +105,11 @@
     <Link>
       <AdditionalDependencies>rdbsslib.lib;rxce.lib;ksecdd.lib;%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfLdr.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfDriverEntry.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY /Y $(OutDir)\nfs41_np.dll $(OutDir)\$(ProjectName)\
+COPY /Y $(OutDir)\nfs41_driver.sys $(OutDir)\$(ProjectName)\
+inf2cat /driver:$(OutDir)\$(ProjectName)\  /os:$(Inf2CatWindowsVersionList)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -111,6 +120,11 @@
     <Link>
       <AdditionalDependencies>rdbsslib.lib;rxce.lib;ksecdd.lib;%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfLdr.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfDriverEntry.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY /Y $(OutDir)\nfs41_np.dll $(OutDir)\$(ProjectName)\
+COPY /Y $(OutDir)\nfs41_driver.sys $(OutDir)\$(ProjectName)\
+inf2cat /driver:$(OutDir)\$(ProjectName)\  /os:$(Inf2CatWindowsVersionList)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -121,6 +135,11 @@
     <Link>
       <AdditionalDependencies>rdbsslib.lib;rxce.lib;ksecdd.lib;%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfLdr.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfDriverEntry.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY /Y $(OutDir)\nfs41_np.dll $(OutDir)\$(ProjectName)\
+COPY /Y $(OutDir)\nfs41_driver.sys $(OutDir)\$(ProjectName)\
+inf2cat /driver:$(OutDir)\$(ProjectName)\  /os:$(Inf2CatWindowsVersionList)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,6 +150,11 @@
     <Link>
       <AdditionalDependencies>rdbsslib.lib;rxce.lib;ksecdd.lib;%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfLdr.lib;$(KMDF_LIB_PATH)$(KMDF_VER_PATH)\WdfDriverEntry.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY /Y $(OutDir)\nfs41_np.dll $(OutDir)\$(ProjectName)\
+COPY /Y $(OutDir)\nfs41_driver.sys $(OutDir)\$(ProjectName)\
+inf2cat /driver:$(OutDir)\$(ProjectName)\  /os:$(Inf2CatWindowsVersionList)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Inf Include="nfs41_driver.inf" />
