@@ -13,7 +13,6 @@ DriverVer= 01/01/2018,1.0; alpha: set DriverVer in stampinf property pages
 
 [DestinationDirs]
 DefaultDestDir = 10
-nfs41_driver_CoInstaller_CopyFiles = 11
 Dll_Dir = 11
 Drivers_Dir = 12
 
@@ -25,7 +24,6 @@ Drivers_Dir = 12
 [SourceDisksFiles]
 nfs41_driver.sys  = 1,,
 nfs41_np.dll = 1,,
-WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
 
 ;*****************************************
 ; Install Section
@@ -35,7 +33,7 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with
 %ManufacturerName%=Standard,NT$ARCH$
 
 [Standard.NT$ARCH$]
-%nfs41_driver.Desc%=nfs41_driver, SWD\nfs41_driver; TODO: CHOOSE SWD; edit hw-id, should Root be Device?
+%nfs41_driver.Desc%=nfs41_driver, Root\nfs41_driver; TODO: CHOOSE SWD; edit hw-id, should Root be Device?
 
 ;[nfs41_driver.NetworkProvider]
 ;DeviceName = "nfsrdr"
@@ -65,29 +63,11 @@ AddService = nfs41_driver,%SPSVCINST_ASSOCSERVICE%, nfs41_driver_Service_Inst
 [nfs41_driver_Service_Inst]
 DisplayName    = %nfs41_driver.SVCDESC%
 ServiceType    = 2               ; SERVICE_FILE_SYSTEM_DRIVER
-StartType      = 1               ; SERVICE_DEMAND_START
+StartType      = 3               ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\nfs41_driver.sys
 LoadOrderGroup=Network
 
-;
-;--- nfs41_driver Coinstaller installation ------
-;
-
-[nfs41_driver.NT.CoInstallers]
-AddReg=nfs41_driver_CoInstaller_AddReg
-CopyFiles=nfs41_driver_CoInstaller_CopyFiles
-
-[nfs41_driver_CoInstaller_AddReg]
-HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
-
-[nfs41_driver_CoInstaller_CopyFiles]
-WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
-
-[nfs41_driver.NT.Wdf]
-KmdfService =  nfs41_driver, nfs41_driver_wdfsect
-[nfs41_driver_wdfsect]
-KmdfLibraryVersion = 1.23  ;$KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
