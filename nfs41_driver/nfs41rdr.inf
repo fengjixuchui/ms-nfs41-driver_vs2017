@@ -1,0 +1,111 @@
+; Copyright: U. Michigan
+; nfs41_driver.inf
+;
+
+[Version]
+Signature   = "$Windows NT$"
+; Network Service Class = NetService 
+; ClassGuid = {4d36e974-e325-11ce-bfc1-08002be10318} 
+; This class includes network services, such as redirectors and servers.
+Class = "NetService"
+ClassGuid = {4d36e974-e325-11ce-bfc1-08002be10318}
+Provider    = %ManufacturerName%
+DriverVer   = 01/05/2018,1.0
+CatalogFile = nfs41_driver.cat
+
+[DestinationDirs]
+DefaultDestDir=10			;%windir%
+nfs41_driver.sysfile=12			;%windir%\system32\drivers
+nfs41_driver.dllfile=11			;%windir%\system32
+
+;;
+;; Default install sections
+;;
+
+;now really messing about... 2018-01-05
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%DeviceDesc%=nfs41_driver,MS_NFS41
+
+[nfs41_driver.NT]
+CopyFiles           = nfs41_driver.sysfile,nfs41_driver.dllfile
+
+[nfs41_driver.NT.Services]
+AddService          = %ServiceName%,,nfs41rdr.Service
+
+;;
+;; Default uninstall sections
+;;
+
+;[DefaultUninstall]
+;DelFiles   = nfs41_driver.sysfile,nfs41_driver.dllfile
+;[DefaultUninstall.Services]
+;DelService = %ServiceName%,0x200      ;Ensure service is stopped before deleting
+
+;
+; Services Section
+;
+
+[nfs41rdr.Service]
+DisplayName      = %ServiceName%
+Description      = %ServiceDescription%
+ServiceBinary    = %12%\nfs41_driver.sys        ;%windir%\system32\drivers\
+Dependencies     = "Tcpip,RpcSs"						; <try>similar to AFS?
+ServiceType      = 2                            ;SERVICE_FILE_SYSTEM_DRIVER
+StartType        = 3                            ;SERVICE_DEMAND_START
+ErrorControl     = 1                            ;SERVICE_ERROR_NORMAL
+LoadOrderGroup = Network
+AddReg           = nfs41_driver.AddRegistry
+
+;
+; Registry Modifications
+;
+
+[nfs41_driver.AddRegistry]
+HKR,,"DebugFlags",0x00010001 ,0x0
+;HKR,NetworkProvider,DeviceName,,\Device\nfs41_driver
+HKR,NetworkProvider,Class,0x00010001,0x00000001;DWORD,WN_NETWORK_CLASS
+HKR,NetworkProvider,Name,,"NFS41 Network"
+HKR,NetworkProvider,ProviderPath,0x20000,%%SystemRoot%%\nfs41_np.dll
+ 
+;
+; Copy Files
+;
+
+[nfs41_driver.sysfile]
+nfs41_driver.sys
+
+[nfs41_driver.dllfile]
+nfs41_np.dll
+
+
+[SourceDisksFiles]
+nfs41_driver.sys=1,,
+nfs41_np.dll=1,,
+
+
+[SourceDisksNames]
+1 = %DiskId1%,,,
+
+;;
+;; String Section
+;;
+
+[Strings]
+; TODO - Add your manufacturer
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName        = "NFS41 Provider"
+ServiceDescription      = "nfs41_driver Kernel Network Redirector"
+ServiceName             = "nfs41_driver"
+DeviceDesc              = "nfs41_driver device"
+DiskId1                 = "NFS41 Driver Source files"
+
+; mini-driver -specific stuff...
+;Instances specific information.
+;DefaultInstance         = "nfs41_driver Instance"
+;Instance1.Name          = "nfs41_driver Instance"
+; TODO - Change the altitude value, see https://msdn.microsoft.com/en-us/windows/hardware/drivers/ifs/load-order-groups-and-altitudes-for-nfs41_driver-drivers
+;Instance1.Altitude       = "_TODO_Change_Altitude_appropriately_"
+;Instance1.Flags         = 0x0              ; Allow all attachments
